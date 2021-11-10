@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -48,12 +49,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            ActivityResultLauncher<String[]> LocationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                    result -> {
+                if(result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)){
+                    locationClient.getLastLocation().addOnSuccessListener(
+                            task -> {
+                                LatLng MyLocation = new LatLng(task.getLatitude(), task.getLongitude());
+                                mMap.addMarker(new MarkerOptions().position(MyLocation).title("User's Location"));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLng(MyLocation));
+                            }
+                    );
+                }
+                    });
+            LocationPermissionRequest.launch(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            });
             return;
         }
         locationClient.getLastLocation().addOnSuccessListener(
                 task -> {
                     LatLng MyLocation = new LatLng(task.getLatitude(), task.getLongitude());
-                    mMap.addMarker(new MarkerOptions().position(MyLocation).title("Marker in New Zealand"));
+                    mMap.addMarker(new MarkerOptions().position(MyLocation).title("User's Location"));
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(MyLocation));
                 }
         );
